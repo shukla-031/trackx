@@ -1,0 +1,2310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrackX - Digital Forensic Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --gray: #95a5a6;
+            --danger: #dc3545;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background: rgba(44, 62, 80, 0.95);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 3px 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            color: var(--secondary);
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 0 15px;
+        }
+
+        .nav-links li {
+            margin-bottom: 10px;
+        }
+
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: var(--light);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: rgba(52, 152, 219, 0.2);
+            color: var(--secondary);
+        }
+
+        .nav-links i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        /* Dashboard Cards */
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .card-icon.cases { background: var(--secondary); }
+        .card-icon.evidence { background: var(--success); }
+        .card-icon.analysis { background: var(--warning); }
+        .card-icon.reports { background: var(--accent); }
+
+        /* Content Sections */
+        .content-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+            display: none;
+        }
+
+        .content-section.active { display: block; }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn i { margin-right: 8px; }
+        .btn-primary { background: var(--secondary); color: white; }
+        .btn-primary:hover { background: #2980b9; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #219653; }
+        .btn-danger { background: var(--accent); color: white; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-warning:hover { background: #e67e22; }
+
+        /* Tables */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; font-weight: 600; color: var(--primary); }
+        tr:hover { background: #f8f9fa; }
+
+        .status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-open { background: #e3f2fd; color: var(--secondary); }
+        .status-in-progress { background: #fff3e0; color: var(--warning); }
+        .status-closed { background: #e8f5e9; color: var(--success); }
+        .status-analyzed { background: #e3f2fd; color: #2196f3; }
+
+        /* Forms */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--primary); }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--secondary);
+            outline: none;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        /* File Upload */
+        .file-upload {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload:hover {
+            border-color: var(--secondary);
+        }
+
+        .file-upload i {
+            font-size: 3rem;
+            color: var(--gray);
+            margin-bottom: 15px;
+        }
+
+        /* Auth Pages */
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .auth-box {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 450px;
+            padding: 40px;
+        }
+
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-logo h1 {
+            font-size: 2.2rem;
+            color: var(--primary);
+        }
+
+        .auth-logo span {
+            color: var(--accent);
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .auth-tab.active {
+            border-bottom-color: var(--secondary);
+            color: var(--secondary);
+            font-weight: 600;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        /* Security Indicators */
+        .password-strength {
+            height: 5px;
+            margin-top: 5px;
+            border-radius: 3px;
+            transition: all 0.3s;
+        }
+
+        .strength-0 { background: var(--danger); width: 20%; }
+        .strength-1 { background: #ff6b6b; width: 40%; }
+        .strength-2 { background: #ffd166; width: 60%; }
+        .strength-3 { background: #06d6a0; width: 80%; }
+        .strength-4 { background: var(--success); width: 100%; }
+
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        .security-high { background: #d4edda; color: #155724; }
+        .security-medium { background: #fff3cd; color: #856404; }
+        .security-low { background: #f8d7da; color: #721c24; }
+
+        /* Metadata Display */
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .metadata-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .metadata-key {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .metadata-value {
+            color: #666;
+            word-break: break-all;
+        }
+
+        .metadata-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .metadata-section h4 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        /* Preview Window */
+        .preview-window {
+            max-width: 600px;
+            max-height: 400px;
+            overflow: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-success { background: var(--success); }
+        .toast-error { background: var(--danger); }
+        .toast-warning { background: var(--warning); }
+        .toast-info { background: var(--secondary); }
+
+        .toast i {
+            margin-right: 10px;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--secondary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; }
+            .nav-links { display: flex; overflow-x: auto; }
+            .nav-links li { margin-bottom: 0; margin-right: 10px; }
+            .dashboard-cards { grid-template-columns: 1fr; }
+            .form-row { flex-direction: column; gap: 0; }
+            .metadata-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Notifications -->
+    <div id="toastContainer"></div>
+
+    <!-- Authentication Pages -->
+    <div id="authPage" class="auth-container">
+        <div class="auth-box">
+            <div class="auth-logo">
+                <h1>Track<span>X</span></h1>
+                <p>Digital Forensic Investigation Tool</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="login">Login</div>
+                <div class="auth-tab" data-tab="register">Register</div>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                    <div class="form-text" style="font-size: 0.85rem; color: #666; margin-top: 5px;">
+                        <i class="fas fa-shield-alt"></i> Secure login enabled
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form">
+                <div class="form-group">
+                    <label for="regUsername">Username</label>
+                    <input type="text" id="regUsername" placeholder="Choose a username" required>
+                </div>
+                <div class="form-group">
+                    <label for="regEmail">Email</label>
+                    <input type="email" id="regEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Password</label>
+                    <input type="password" id="regPassword" placeholder="Create a strong password" required
+                           oninput="checkPasswordStrength(this.value)">
+                    <div class="password-strength" id="passwordStrength"></div>
+                    <div class="form-text" style="font-size: 0.85rem; color: #666; margin-top: 5px;">
+                        <i class="fas fa-info-circle"></i> Use 8+ characters with mix of letters, numbers & symbols
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="regConfirmPassword">Confirm Password</label>
+                    <input type="password" id="regConfirmPassword" placeholder="Confirm your password" required>
+                </div>
+                <div class="form-group">
+                    <label for="regRole">Role</label>
+                    <select id="regRole" required>
+                        <option value="investigator">Investigator</option>
+                        <option value="admin">Admin</option>
+                        <option value="viewer">Viewer</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%;">
+                    <i class="fas fa-user-plus"></i> Register
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app" class="container" style="display: none;">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>Track<span>X</span></h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#" class="active" data-section="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                <li><a href="#" data-section="cases"><i class="fas fa-folder"></i> Cases</a></li>
+                <li><a href="#" data-section="evidence"><i class="fas fa-file-upload"></i> Evidence</a></li>
+                <li><a href="#" data-section="analysis"><i class="fas fa-search"></i> Analysis</a></li>
+                <li><a href="#" data-section="reports"><i class="fas fa-chart-bar"></i> Reports</a></li>
+                <li><a href="#" data-section="security"><i class="fas fa-shield-alt"></i> Security</a></li>
+                <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h2 id="pageTitle">Dashboard</h2>
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">JD</div>
+                    <div>
+                        <div id="userName">John Doe</div>
+                        <div style="font-size: 0.8rem; color: var(--gray);" id="userRole">Investigator</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="content-section active">
+                <div class="dashboard-cards">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 id="totalCases">0</h3>
+                                <p>Total Cases</p>
+                            </div>
+                            <div class="card-icon cases">
+                                <i class="fas fa-folder"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 id="totalEvidence">0</h3>
+                                <p>Evidence Items</p>
+                            </div>
+                            <div class="card-icon evidence">
+                                <i class="fas fa-file"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 id="pendingAnalysis">0</h3>
+                                <p>Pending Analysis</p>
+                            </div>
+                            <div class="card-icon analysis">
+                                <i class="fas fa-search"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 id="reportsGenerated">0</h3>
+                                <p>Reports Generated</p>
+                            </div>
+                            <div class="card-icon reports">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2>Recent Cases</h2>
+                        <button class="btn btn-primary" id="viewAllCases">
+                            <i class="fas fa-eye"></i> View All
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table id="recentCasesTable">
+                            <thead>
+                                <tr>
+                                    <th>Case Number</th>
+                                    <th>Title</th>
+                                    <th>Status</th>
+                                    <th>Evidence</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="5" style="text-align: center;">No cases yet</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cases Section -->
+            <div id="cases" class="content-section">
+                <div class="section-header">
+                    <h2>Case Management</h2>
+                    <div>
+                        <button class="btn btn-warning" id="importCaseBtn">
+                            <i class="fas fa-file-import"></i> Import Case Files
+                        </button>
+                        <button class="btn btn-primary" id="addCaseBtn">
+                            <i class="fas fa-plus"></i> Add New Case
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Case Import Form -->
+                <div id="importCaseForm" style="display: none; margin-bottom: 25px;">
+                    <h3>Import Case Files from System</h3>
+                    <div class="file-upload" id="caseFilesUploadArea">
+                        <i class="fas fa-folder-open"></i>
+                        <p>Click to select case files or drag and drop</p>
+                        <p style="font-size: 0.8rem; color: var(--gray);">Supports: Images, Documents, Archives</p>
+                        <input type="file" id="caseFiles" multiple style="display: none;" accept=".jpg,.jpeg,.png,.gif,.bmp,.pdf,.doc,.docx,.zip,.rar">
+                    </div>
+                    <div id="caseFilesList" style="margin-top: 15px;"></div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="importCaseName">Case Name</label>
+                            <input type="text" id="importCaseName" placeholder="Enter case name for imported files">
+                        </div>
+                        <div class="form-group">
+                            <label for="importCaseTags">Tags</label>
+                            <input type="text" id="importCaseTags" placeholder="e.g. imported, evidence, photos">
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-success" id="processImportBtn">
+                        <i class="fas fa-cogs"></i> Process & Create Case
+                    </button>
+                    <button type="button" class="btn btn-danger" id="cancelImportBtn">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+
+                <!-- Case Form -->
+                <div id="caseForm" style="display: none; margin-bottom: 25px;">
+                    <h3>Create New Case</h3>
+                    <form id="newCaseForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="caseTitle">Case Title</label>
+                                <input type="text" id="caseTitle" placeholder="Enter case title" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="casePriority">Priority</label>
+                                <select id="casePriority" required>
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="critical">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="caseDescription">Description</label>
+                            <textarea id="caseDescription" rows="4" placeholder="Enter case description" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="caseTags">Tags (comma separated)</label>
+                            <input type="text" id="caseTags" placeholder="e.g. fraud, digital, investigation">
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Create Case
+                        </button>
+                        <button type="button" class="btn btn-danger" id="cancelCaseBtn">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </form>
+                </div>
+
+                <div class="table-container">
+                    <table id="casesTable">
+                        <thead>
+                            <tr>
+                                <th>Case Number</th>
+                                <th>Title</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Evidence</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="7" style="text-align: center;">No cases yet</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Evidence Section -->
+            <div id="evidence" class="content-section">
+                <div class="section-header">
+                    <h2>Evidence Management</h2>
+                    <button class="btn btn-primary" id="addEvidenceBtn">
+                        <i class="fas fa-upload"></i> Upload Evidence
+                    </button>
+                </div>
+
+                <!-- Evidence Upload Form -->
+                <div id="evidenceForm" style="display: none; margin-bottom: 25px;">
+                    <h3>Upload New Evidence</h3>
+                    <form id="newEvidenceForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="evidenceCase">Case</label>
+                                <select id="evidenceCase" required>
+                                    <option value="">No cases available</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="evidenceName">Evidence Name</label>
+                                <input type="text" id="evidenceName" placeholder="Enter evidence name" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="evidenceType">Evidence Type</label>
+                                <select id="evidenceType" required>
+                                    <option value="image">Image</option>
+                                    <option value="video">Video</option>
+                                    <option value="audio">Audio</option>
+                                    <option value="document">Document</option>
+                                    <option value="log">Log File</option>
+                                    <option value="memory">Memory Dump</option>
+                                    <option value="disk-image">Disk Image</option>
+                                    <option value="network">Network Capture</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="evidenceTags">Tags (comma separated)</label>
+                                <input type="text" id="evidenceTags" placeholder="e.g. screenshot, important">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Upload File</label>
+                            <div class="file-upload" id="fileUploadArea">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Click to upload or drag and drop</p>
+                                <p style="font-size: 0.8rem; color: var(--gray);">Max file size: 100MB</p>
+                                <input type="file" id="evidenceFile" style="display: none;" accept="image/*,.pdf,.doc,.docx,.txt,.log,.pcap,.dmp">
+                            </div>
+                            <div id="fileName" style="margin-top: 10px; font-weight: 600;"></div>
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-upload"></i> Upload Evidence
+                        </button>
+                        <button type="button" class="btn btn-danger" id="cancelEvidenceBtn">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </form>
+                </div>
+
+                <div class="table-container">
+                    <table id="evidenceTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Case</th>
+                                <th>Size</th>
+                                <th>Status</th>
+                                <th>Uploaded</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="7" style="text-align: center;">No evidence yet</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Analysis Section -->
+            <div id="analysis" class="content-section">
+                <div class="section-header">
+                    <h2>Evidence Analysis</h2>
+                </div>
+                <div id="analysisContent">
+                    <p>Select evidence to analyze from the Evidence section.</p>
+                </div>
+            </div>
+
+            <!-- Reports Section -->
+            <div id="reports" class="content-section">
+                <div class="section-header">
+                    <h2>Reports</h2>
+                    <button class="btn btn-primary" id="generateReportBtn">
+                        <i class="fas fa-file-pdf"></i> Generate Report
+                    </button>
+                </div>
+                <div id="reportsContent">
+                    <p>No reports generated yet. Generate a report to see it here.</p>
+                </div>
+            </div>
+
+            <!-- Security Section -->
+            <div id="security" class="content-section">
+                <div class="section-header">
+                    <h2>Security Dashboard</h2>
+                    <span class="security-badge security-high" id="securityStatus">
+                        <i class="fas fa-shield-alt"></i> High Security
+                    </span>
+                </div>
+                
+                <div class="metadata-grid">
+                    <div class="metadata-item">
+                        <div class="metadata-key">Last Login</div>
+                        <div class="metadata-value" id="lastLogin">Never</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-key">Login Location</div>
+                        <div class="metadata-value" id="loginLocation">Unknown</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-key">Session Expires</div>
+                        <div class="metadata-value" id="sessionExpires">N/A</div>
+                    </div>
+                    <div class="metadata-item">
+                        <div class="metadata-key">Password Last Changed</div>
+                        <div class="metadata-value" id="passwordChanged">Never</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h3>Security Actions</h3>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button class="btn btn-warning" id="changePasswordBtn">
+                            <i class="fas fa-key"></i> Change Password
+                        </button>
+                        <button class="btn btn-danger" id="logoutAllBtn">
+                            <i class="fas fa-sign-out-alt"></i> Logout All Devices
+                        </button>
+                        <button class="btn btn-primary" id="viewAuditLogBtn">
+                            <i class="fas fa-history"></i> View Audit Log
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metadata Analysis Modal -->
+            <div id="metadataModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1001; overflow-y: auto;">
+                <div style="background: white; margin: 50px auto; max-width: 900px; border-radius: 10px; padding: 30px;">
+                    <div class="section-header">
+                        <h2>Evidence Metadata Analysis</h2>
+                        <button class="btn btn-danger" onclick="closeMetadataModal()">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                    </div>
+                    
+                    <div id="metadataPreview" class="preview-window"></div>
+                    
+                    <div id="metadataContent">
+                        <!-- Metadata will be dynamically inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+        // Enhanced Security Implementation
+        class SecurityManager {
+            constructor() {
+                this.encryptionKey = 'trackx-secure-key-2024';
+                this.hashSalt = 'trackx-salt-2024';
+                this.failedAttempts = {};
+                this.maxAttempts = 5;
+                this.lockoutTime = 15 * 60 * 1000; // 15 minutes
+            }
+
+            hashPassword(password) {
+                return CryptoJS.SHA256(this.hashSalt + password + this.encryptionKey).toString();
+            }
+
+            encryptData(data) {
+                return CryptoJS.AES.encrypt(JSON.stringify(data), this.encryptionKey).toString();
+            }
+
+            decryptData(encryptedData) {
+                try {
+                    const bytes = CryptoJS.AES.decrypt(encryptedData, this.encryptionKey);
+                    return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            generateSecureToken() {
+                const randomBytes = CryptoJS.lib.WordArray.random(32);
+                return CryptoJS.SHA256(randomBytes + Date.now().toString()).toString();
+            }
+
+            validatePassword(password) {
+                // Password policy: min 8 chars, at least one number, one uppercase, one special char
+                const minLength = 8;
+                const hasNumber = /\d/;
+                const hasUpper = /[A-Z]/;
+                const hasLower = /[a-z]/;
+                const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/;
+
+                if (password.length < minLength) return false;
+                if (!hasNumber.test(password)) return false;
+                if (!hasUpper.test(password)) return false;
+                if (!hasLower.test(password)) return false;
+                if (!hasSpecial.test(password)) return false;
+
+                return true;
+            }
+
+            checkPasswordStrength(password) {
+                let strength = 0;
+                
+                if (password.length >= 8) strength++;
+                if (password.length >= 12) strength++;
+                if (/[A-Z]/.test(password)) strength++;
+                if (/[0-9]/.test(password)) strength++;
+                if (/[^A-Za-z0-9]/.test(password)) strength++;
+                
+                return Math.min(strength, 4);
+            }
+
+            checkLockout(email) {
+                const lockout = this.failedAttempts[email];
+                if (lockout && lockout.count >= this.maxAttempts) {
+                    if (Date.now() - lockout.time < this.lockoutTime) {
+                        return true;
+                    } else {
+                        delete this.failedAttempts[email];
+                    }
+                }
+                return false;
+            }
+
+            recordFailedAttempt(email) {
+                if (!this.failedAttempts[email]) {
+                    this.failedAttempts[email] = { count: 0, time: Date.now() };
+                }
+                this.failedAttempts[email].count++;
+                this.failedAttempts[email].time = Date.now();
+            }
+
+            resetFailedAttempts(email) {
+                delete this.failedAttempts[email];
+            }
+
+            sanitizeInput(input) {
+                if (typeof input !== 'string') return input;
+                return input
+                    .replace(/<[^>]*>/g, '') // Remove HTML tags
+                    .replace(/[<>"'`]/g, '') // Remove dangerous characters
+                    .trim();
+            }
+
+            validateFileType(file, allowedTypes) {
+                const fileName = file.name.toLowerCase();
+                return allowedTypes.some(type => fileName.endsWith(type));
+            }
+
+            validateFileSize(file, maxSizeMB) {
+                return file.size <= maxSizeMB * 1024 * 1024;
+            }
+        }
+
+        // Enhanced Database with Encryption
+        class SecureDatabase {
+            constructor(securityManager) {
+                this.security = securityManager;
+                this.encryptedData = localStorage.getItem('trackx_encrypted_data');
+                this.data = this.loadData();
+            }
+
+            loadData() {
+                if (this.encryptedData) {
+                    const decrypted = this.security.decryptData(this.encryptedData);
+                    return decrypted || {
+                        users: [],
+                        cases: [],
+                        evidence: [],
+                        sessions: [],
+                        auditLog: [],
+                        securitySettings: []
+                    };
+                }
+                return {
+                    users: [],
+                    cases: [],
+                    evidence: [],
+                    sessions: [],
+                    auditLog: [],
+                    securitySettings: []
+                };
+            }
+
+            save() {
+                this.data.lastModified = new Date().toISOString();
+                this.encryptedData = this.security.encryptData(this.data);
+                localStorage.setItem('trackx_encrypted_data', this.encryptedData);
+            }
+
+            logAudit(action, userId, details = {}) {
+                const logEntry = {
+                    id: Date.now(),
+                    action,
+                    user_id: userId,
+                    timestamp: new Date().toISOString(),
+                    ip: details.ip || 'unknown',
+                    userAgent: navigator.userAgent,
+                    details
+                };
+                this.data.auditLog.push(logEntry);
+                this.save();
+                return logEntry;
+            }
+
+            createUser(userData) {
+                const hashedPassword = this.security.hashPassword(userData.password);
+                const user = {
+                    id: Date.now(),
+                    username: this.security.sanitizeInput(userData.username),
+                    email: this.security.sanitizeInput(userData.email),
+                    password: hashedPassword,
+                    role: userData.role,
+                    created_at: new Date().toISOString(),
+                    last_password_change: new Date().toISOString(),
+                    is_active: true,
+                    failed_login_attempts: 0,
+                    last_login: null,
+                    mfa_enabled: false
+                };
+                this.data.users.push(user);
+                this.save();
+                this.logAudit('USER_CREATED', user.id, { email: user.email });
+                return user;
+            }
+
+            findUserByEmail(email) {
+                return this.data.users.find(user => 
+                    user.email === this.security.sanitizeInput(email) && user.is_active
+                );
+            }
+
+            updateUserLogin(userId, ip = 'unknown') {
+                const user = this.data.users.find(u => u.id === userId);
+                if (user) {
+                    user.last_login = new Date().toISOString();
+                    user.failed_login_attempts = 0;
+                    user.last_login_ip = ip;
+                    this.save();
+                    this.logAudit('LOGIN_SUCCESS', userId, { ip });
+                }
+            }
+
+            // Case methods with enhanced security
+            createCase(caseData) {
+                const caseItem = {
+                    id: Date.now(),
+                    case_number: `CASE-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+                    title: this.security.sanitizeInput(caseData.title),
+                    description: this.security.sanitizeInput(caseData.description),
+                    status: 'open',
+                    priority: caseData.priority,
+                    tags: caseData.tags.map(tag => this.security.sanitizeInput(tag)),
+                    evidence_count: 0,
+                    created_by: caseData.created_by,
+                    created_at: new Date().toISOString(),
+                    hash: this.security.generateSecureToken(),
+                    is_encrypted: true
+                };
+                this.data.cases.push(caseItem);
+                this.save();
+                this.logAudit('CASE_CREATED', caseData.created_by, { caseId: caseItem.id });
+                return caseItem;
+            }
+
+            createEvidence(evidenceData) {
+                const evidence = {
+                    id: Date.now(),
+                    case_id: evidenceData.case_id,
+                    name: this.security.sanitizeInput(evidenceData.name),
+                    evidence_type: evidenceData.evidence_type,
+                    file_name: evidenceData.file_name,
+                    file_size: evidenceData.file_size,
+                    file_hash: evidenceData.file_hash || this.security.generateSecureToken(),
+                    status: 'uploaded',
+                    metadata: evidenceData.metadata || {},
+                    tags: evidenceData.tags.map(tag => this.security.sanitizeInput(tag)),
+                    uploaded_by: evidenceData.uploaded_by,
+                    uploaded_at: new Date().toISOString(),
+                    is_encrypted: true,
+                    security_level: evidenceData.security_level || 'medium'
+                };
+                this.data.evidence.push(evidence);
+                
+                const caseItem = this.data.cases.find(c => c.id === evidenceData.case_id);
+                if (caseItem) {
+                    caseItem.evidence_count = (caseItem.evidence_count || 0) + 1;
+                }
+                
+                this.save();
+                this.logAudit('EVIDENCE_UPLOADED', evidenceData.uploaded_by, { evidenceId: evidence.id });
+                return evidence;
+            }
+
+            createSession(userId, token, ip = 'unknown') {
+                const session = {
+                    user_id: userId,
+                    token: token,
+                    created_at: new Date().toISOString(),
+                    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+                    ip_address: ip,
+                    user_agent: navigator.userAgent,
+                    is_active: true
+                };
+                this.data.sessions.push(session);
+                this.save();
+                return session;
+            }
+
+            validateToken(token) {
+                const session = this.data.sessions.find(s => s.token === token && s.is_active);
+                if (!session) return null;
+                
+                if (new Date() > new Date(session.expires_at)) {
+                    session.is_active = false;
+                    this.save();
+                    return null;
+                }
+                
+                return this.data.users.find(user => user.id === session.user_id);
+            }
+
+            getAuditLog(userId = null, limit = 50) {
+                let logs = this.data.auditLog;
+                if (userId) {
+                    logs = logs.filter(log => log.user_id === userId);
+                }
+                return logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, limit);
+            }
+        }
+
+        // Metadata Extractor
+        class MetadataExtractor {
+            static async extractImageMetadata(file) {
+                return new Promise((resolve) => {
+                    const metadata = {
+                        basic: {},
+                        exif: {},
+                        technical: {}
+                    };
+
+                    // Basic file info
+                    metadata.basic = {
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        lastModified: file.lastModified,
+                        extension: file.name.split('.').pop().toLowerCase()
+                    };
+
+                    // For images, use EXIF.js
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const image = new Image();
+                            image.onload = function() {
+                                metadata.technical.dimensions = {
+                                    width: image.width,
+                                    height: image.height,
+                                    aspectRatio: (image.width / image.height).toFixed(2)
+                                };
+
+                                // Extract EXIF data if available
+                                EXIF.getData(image, function() {
+                                    const allMetaData = EXIF.getAllTags(this);
+                                    metadata.exif = allMetaData;
+                                    
+                                    // Add common EXIF data
+                                    metadata.basic.camera = allMetaData.Make || 'Unknown';
+                                    metadata.basic.model = allMetaData.Model || 'Unknown';
+                                    metadata.basic.dateTaken = allMetaData.DateTimeOriginal || allMetaData.DateTime || 'Unknown';
+                                    metadata.basic.location = allMetaData.GPSLatitude ? 
+                                        `Lat: ${allMetaData.GPSLatitude}, Lon: ${allMetaData.GPSLongitude}` : 'Not available';
+                                });
+                                
+                                resolve(metadata);
+                            };
+                            image.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        resolve(metadata);
+                    }
+                });
+            }
+
+            static async extractFileMetadata(file) {
+                const metadata = {
+                    basic: {
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        lastModified: file.lastModified,
+                        extension: file.name.split('.').pop().toLowerCase()
+                    },
+                    technical: {
+                        mimeType: file.type,
+                        isBinary: !file.type.startsWith('text/')
+                    }
+                };
+
+                // Calculate file hash
+                const hash = await this.calculateFileHash(file);
+                metadata.basic.hash = hash;
+
+                return metadata;
+            }
+
+            static async calculateFileHash(file) {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const wordArray = CryptoJS.lib.WordArray.create(e.target.result);
+                        const hash = CryptoJS.SHA256(wordArray).toString();
+                        resolve(hash);
+                    };
+                    reader.readAsArrayBuffer(file);
+                });
+            }
+        }
+
+        // Application State
+        const securityManager = new SecurityManager();
+        const db = new SecureDatabase(securityManager);
+        let currentUser = null;
+        let authToken = localStorage.getItem('trackx_secure_token');
+
+        // DOM Elements
+        const authPage = document.getElementById('authPage');
+        const app = document.getElementById('app');
+        const toastContainer = document.getElementById('toastContainer');
+
+        // Utility Functions
+        function showToast(message, type = 'info', duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                ${message}
+            `;
+            toastContainer.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 10);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            const originalContent = element.innerHTML;
+            element.innerHTML = '<div class="spinner"></div>';
+            return () => {
+                element.innerHTML = originalContent;
+            };
+        }
+
+        function formatMetadata(metadata) {
+            let html = '';
+            
+            for (const section in metadata) {
+                if (Object.keys(metadata[section]).length > 0) {
+                    html += `<div class="metadata-section">
+                        <h4>${section.charAt(0).toUpperCase() + section.slice(1)} Metadata</h4>
+                        <div class="metadata-grid">`;
+                    
+                    for (const key in metadata[section]) {
+                        let value = metadata[section][key];
+                        if (value === null || value === undefined) continue;
+                        
+                        if (typeof value === 'object') {
+                            value = JSON.stringify(value, null, 2);
+                        }
+                        
+                        html += `<div class="metadata-item">
+                            <div class="metadata-key">${key}</div>
+                            <div class="metadata-value">${value}</div>
+                        </div>`;
+                    }
+                    
+                    html += `</div></div>`;
+                }
+            }
+            
+            return html;
+        }
+
+        function displayImagePreview(file) {
+            return new Promise((resolve) => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const preview = document.createElement('div');
+                        preview.innerHTML = `
+                            <h4>Image Preview</h4>
+                            <img src="${e.target.result}" class="preview-image" alt="Preview">
+                            <p>${file.name} (${(file.size / 1024).toFixed(2)} KB)</p>
+                        `;
+                        resolve(preview.outerHTML);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    resolve(`<p>File: ${file.name} (${(file.size / 1024).toFixed(2)} KB)</p>`);
+                }
+            });
+        }
+
+        function openMetadataModal(evidenceId) {
+            const evidence = db.data.evidence.find(e => e.id === evidenceId);
+            if (!evidence) return;
+            
+            const modal = document.getElementById('metadataModal');
+            const content = document.getElementById('metadataContent');
+            
+            // Display basic info
+            content.innerHTML = `
+                <div class="metadata-section">
+                    <h4>Evidence Information</h4>
+                    <div class="metadata-grid">
+                        <div class="metadata-item">
+                            <div class="metadata-key">Evidence Name</div>
+                            <div class="metadata-value">${evidence.name}</div>
+                        </div>
+                        <div class="metadata-item">
+                            <div class="metadata-key">Type</div>
+                            <div class="metadata-value">${evidence.evidence_type}</div>
+                        </div>
+                        <div class="metadata-item">
+                            <div class="metadata-key">File Hash</div>
+                            <div class="metadata-value" style="font-family: monospace; font-size: 0.9rem;">${evidence.file_hash}</div>
+                        </div>
+                        <div class="metadata-item">
+                            <div class="metadata-key">Security Level</div>
+                            <div class="metadata-value">${evidence.security_level}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Display metadata if available
+            if (evidence.metadata && Object.keys(evidence.metadata).length > 0) {
+                content.innerHTML += formatMetadata(evidence.metadata);
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        function closeMetadataModal() {
+            document.getElementById('metadataModal').style.display = 'none';
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            setupEventListeners();
+        });
+
+        function initializeApp() {
+            // Check if user is logged in
+            if (authToken) {
+                currentUser = db.validateToken(authToken);
+                if (currentUser) {
+                    showApp();
+                } else {
+                    localStorage.removeItem('trackx_secure_token');
+                    showAuthPage();
+                }
+            } else {
+                showAuthPage();
+            }
+        }
+
+        function setupEventListeners() {
+            // Auth Tabs
+            document.querySelectorAll('.auth-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    switchAuthTab(tabName);
+                });
+            });
+
+            // Auth Forms
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('registerForm').addEventListener('submit', handleRegister);
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+            document.getElementById('logoutAllBtn').addEventListener('click', handleLogoutAll);
+
+            // Navigation
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (this.id === 'logoutBtn') return;
+                    
+                    const sectionId = this.getAttribute('data-section');
+                    showSection(sectionId);
+                });
+            });
+
+            // Case Management
+            document.getElementById('addCaseBtn').addEventListener('click', () => toggleElement('caseForm'));
+            document.getElementById('importCaseBtn').addEventListener('click', () => toggleElement('importCaseForm'));
+            document.getElementById('cancelCaseBtn').addEventListener('click', () => toggleElement('caseForm', false));
+            document.getElementById('cancelImportBtn').addEventListener('click', () => toggleElement('importCaseForm', false));
+            document.getElementById('newCaseForm').addEventListener('submit', handleNewCase);
+            document.getElementById('processImportBtn').addEventListener('click', handleImportCase);
+            document.getElementById('caseFilesUploadArea').addEventListener('click', () => {
+                document.getElementById('caseFiles').click();
+            });
+            document.getElementById('caseFiles').addEventListener('change', handleCaseFilesSelect);
+
+            // Evidence Management
+            document.getElementById('addEvidenceBtn').addEventListener('click', () => {
+                toggleElement('evidenceForm');
+                loadCasesForEvidence();
+            });
+            document.getElementById('cancelEvidenceBtn').addEventListener('click', () => toggleElement('evidenceForm', false));
+            document.getElementById('newEvidenceForm').addEventListener('submit', handleNewEvidence);
+
+            // File Upload
+            document.getElementById('fileUploadArea').addEventListener('click', () => {
+                document.getElementById('evidenceFile').click();
+            });
+            document.getElementById('evidenceFile').addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    document.getElementById('fileName').textContent = `Selected file: ${this.files[0].name}`;
+                }
+            });
+
+            // View All Cases
+            document.getElementById('viewAllCases').addEventListener('click', () => {
+                showSection('cases');
+            });
+
+            // Generate Report
+            document.getElementById('generateReportBtn').addEventListener('click', generateReport);
+
+            // Security Actions
+            document.getElementById('changePasswordBtn').addEventListener('click', handleChangePassword);
+            document.getElementById('viewAuditLogBtn').addEventListener('click', viewAuditLog);
+        }
+
+        // Password Strength Checker
+        function checkPasswordStrength(password) {
+            const strength = securityManager.checkPasswordStrength(password);
+            const indicator = document.getElementById('passwordStrength');
+            indicator.className = `password-strength strength-${strength}`;
+        }
+
+        // Auth Functions
+        function switchAuthTab(tabName) {
+            document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+            
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}Form`).classList.add('active');
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = securityManager.sanitizeInput(document.getElementById('email').value);
+            const password = document.getElementById('password').value;
+            
+            // Check lockout
+            if (securityManager.checkLockout(email)) {
+                showToast('Account temporarily locked due to too many failed attempts. Please try again later.', 'error', 5000);
+                return;
+            }
+            
+            const user = db.findUserByEmail(email);
+            if (user && user.password === securityManager.hashPassword(password)) {
+                // Successful login
+                authToken = securityManager.generateSecureToken();
+                db.createSession(user.id, authToken);
+                db.updateUserLogin(user.id);
+                securityManager.resetFailedAttempts(email);
+                
+                localStorage.setItem('trackx_secure_token', authToken);
+                currentUser = user;
+                
+                showToast('Login successful!', 'success');
+                setTimeout(() => showApp(), 1000);
+            } else {
+                // Failed login
+                securityManager.recordFailedAttempt(email);
+                const attempts = securityManager.failedAttempts[email]?.count || 1;
+                const remaining = securityManager.maxAttempts - attempts;
+                
+                if (remaining > 0) {
+                    showToast(`Invalid email or password. ${remaining} attempts remaining.`, 'error');
+                } else {
+                    showToast('Account locked due to too many failed attempts. Please try again in 15 minutes.', 'error', 5000);
+                }
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            
+            const username = securityManager.sanitizeInput(document.getElementById('regUsername').value);
+            const email = securityManager.sanitizeInput(document.getElementById('regEmail').value);
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            const role = document.getElementById('regRole').value;
+            
+            // Validation
+            if (password !== confirmPassword) {
+                showToast('Passwords do not match!', 'error');
+                return;
+            }
+            
+            if (!securityManager.validatePassword(password)) {
+                showToast('Password must be at least 8 characters with uppercase, lowercase, number, and special character.', 'error');
+                return;
+            }
+            
+            if (db.findUserByEmail(email)) {
+                showToast('User with this email already exists', 'error');
+                return;
+            }
+            
+            const user = db.createUser({
+                username,
+                email,
+                password,
+                role
+            });
+            
+            showToast('Registration successful! Please login.', 'success');
+            switchAuthTab('login');
+            document.getElementById('registerForm').reset();
+            document.getElementById('passwordStrength').className = 'password-strength';
+        }
+
+        function handleLogout() {
+            db.logAudit('LOGOUT', currentUser.id);
+            localStorage.removeItem('trackx_secure_token');
+            authToken = null;
+            currentUser = null;
+            showToast('Logged out successfully', 'info');
+            setTimeout(() => showAuthPage(), 500);
+        }
+
+        function handleLogoutAll() {
+            // Invalidate all sessions for current user
+            db.data.sessions.forEach(session => {
+                if (session.user_id === currentUser.id) {
+                    session.is_active = false;
+                }
+            });
+            db.save();
+            db.logAudit('LOGOUT_ALL', currentUser.id);
+            handleLogout();
+        }
+
+        function showAuthPage() {
+            authPage.style.display = 'flex';
+            app.style.display = 'none';
+        }
+
+        function showApp() {
+            authPage.style.display = 'none';
+            app.style.display = 'flex';
+            
+            // Load user info
+            document.getElementById('userName').textContent = currentUser.username;
+            document.getElementById('userRole').textContent = currentUser.role;
+            document.getElementById('userAvatar').textContent = 
+                currentUser.username.substring(0, 2).toUpperCase();
+            
+            // Load security info
+            document.getElementById('lastLogin').textContent = 
+                currentUser.last_login ? new Date(currentUser.last_login).toLocaleString() : 'Never';
+            document.getElementById('passwordChanged').textContent = 
+                new Date(currentUser.last_password_change).toLocaleString();
+            
+            // Load initial data
+            loadDashboard();
+            loadCases();
+            loadEvidence();
+        }
+
+        // Navigation
+        function showSection(sectionId) {
+            // Update active nav link
+            document.querySelectorAll('.nav-links a').forEach(link => link.classList.remove('active'));
+            document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+            
+            // Show selected section
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Update page title
+            document.getElementById('pageTitle').textContent = 
+                document.querySelector(`[data-section="${sectionId}"]`).textContent.trim();
+            
+            // Load section-specific data
+            if (sectionId === 'security') {
+                loadSecurityInfo();
+            }
+        }
+
+        // Case Import Handler
+        function handleCaseFilesSelect(e) {
+            const files = e.target.files;
+            const list = document.getElementById('caseFilesList');
+            list.innerHTML = '';
+            
+            if (files.length > 0) {
+                let html = '<h4>Selected Files:</h4><ul style="list-style: none; padding: 10px 0;">';
+                for (let i = 0; i < Math.min(files.length, 10); i++) {
+                    html += `<li style="padding: 5px 0; border-bottom: 1px solid #eee;">
+                        <i class="fas fa-file"></i> ${files[i].name} (${(files[i].size / 1024).toFixed(2)} KB)
+                    </li>`;
+                }
+                if (files.length > 10) {
+                    html += `<li style="padding: 5px 0; color: var(--gray);">
+                        ...and ${files.length - 10} more files
+                    </li>`;
+                }
+                html += '</ul>';
+                list.innerHTML = html;
+            }
+        }
+
+        async function handleImportCase() {
+            const files = document.getElementById('caseFiles').files;
+            const caseName = document.getElementById('importCaseName').value || `Imported Case ${new Date().toLocaleDateString()}`;
+            const tags = document.getElementById('importCaseTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+            
+            if (files.length === 0) {
+                showToast('Please select files to import', 'error');
+                return;
+            }
+            
+            // Create new case
+            const caseItem = db.createCase({
+                title: caseName,
+                description: `Imported case containing ${files.length} files`,
+                priority: 'medium',
+                tags: [...tags, 'imported'],
+                created_by: currentUser.id
+            });
+            
+            showToast(`Importing ${files.length} files...`, 'info');
+            
+            // Process each file
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // Extract metadata
+                let metadata = {};
+                if (file.type.startsWith('image/')) {
+                    metadata = await MetadataExtractor.extractImageMetadata(file);
+                } else {
+                    metadata = await MetadataExtractor.extractFileMetadata(file);
+                }
+                
+                // Calculate file hash
+                const fileHash = await MetadataExtractor.calculateFileHash(file);
+                
+                // Create evidence record
+                db.createEvidence({
+                    case_id: caseItem.id,
+                    name: file.name,
+                    evidence_type: file.type.startsWith('image/') ? 'image' : 'document',
+                    file_name: file.name,
+                    file_size: file.size,
+                    file_hash: fileHash,
+                    metadata: metadata,
+                    tags: [...tags, 'imported'],
+                    uploaded_by: currentUser.id,
+                    security_level: 'medium'
+                });
+            }
+            
+            showToast(`Successfully imported ${files.length} files into case "${caseName}"`, 'success');
+            toggleElement('importCaseForm', false);
+            document.getElementById('caseFiles').value = '';
+            document.getElementById('caseFilesList').innerHTML = '';
+            document.getElementById('importCaseName').value = '';
+            document.getElementById('importCaseTags').value = '';
+            
+            loadCases();
+            loadEvidence();
+            loadDashboard();
+        }
+
+        // Data Management Functions
+        function loadDashboard() {
+            const cases = db.data.cases;
+            const evidence = db.data.evidence;
+            
+            document.getElementById('totalCases').textContent = cases.length;
+            document.getElementById('totalEvidence').textContent = evidence.length;
+            document.getElementById('pendingAnalysis').textContent = evidence.filter(e => e.status === 'uploaded').length;
+            document.getElementById('reportsGenerated').textContent = Math.floor(cases.length * 0.7); // Mock data
+            
+            // Recent cases
+            const tbody = document.getElementById('recentCasesTable').querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            if (cases.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No cases yet</td></tr>';
+            } else {
+                cases.slice(0, 5).forEach(caseItem => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${caseItem.case_number}</td>
+                        <td>${caseItem.title}</td>
+                        <td><span class="status status-${caseItem.status}">${caseItem.status}</span></td>
+                        <td>${caseItem.evidence_count || 0}</td>
+                        <td>${new Date(caseItem.created_at).toLocaleDateString()}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        function loadCases() {
+            const cases = db.data.cases;
+            const tbody = document.getElementById('casesTable').querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            if (cases.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No cases yet</td></tr>';
+            } else {
+                cases.forEach(caseItem => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${caseItem.case_number}</td>
+                        <td>${caseItem.title}</td>
+                        <td><span class="status status-${caseItem.status}">${caseItem.status}</span></td>
+                        <td>${caseItem.priority}</td>
+                        <td>${caseItem.evidence_count || 0}</td>
+                        <td>${new Date(caseItem.created_at).toLocaleDateString()}</td>
+                        <td>
+                            <button class="btn btn-primary" onclick="viewCase(${caseItem.id})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        function loadEvidence() {
+            const evidence = db.data.evidence;
+            const tbody = document.getElementById('evidenceTable').querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            if (evidence.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No evidence yet</td></tr>';
+            } else {
+                evidence.forEach(item => {
+                    const caseItem = db.data.cases.find(c => c.id === item.case_id);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.name}</td>
+                        <td>${item.evidence_type}</td>
+                        <td>${caseItem ? caseItem.case_number : 'N/A'}</td>
+                        <td>${formatFileSize(item.file_size)}</td>
+                        <td><span class="status status-${item.status}">${item.status}</span></td>
+                        <td>${new Date(item.uploaded_at).toLocaleDateString()}</td>
+                        <td>
+                            <button class="btn btn-primary" onclick="viewEvidence(${item.id})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-warning" onclick="analyzeEvidence(${item.id})">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <button class="btn btn-info" onclick="openMetadataModal(${item.id})">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        function loadCasesForEvidence() {
+            const cases = db.data.cases;
+            const select = document.getElementById('evidenceCase');
+            select.innerHTML = '';
+            
+            if (cases.length === 0) {
+                select.innerHTML = '<option value="">No cases available. Create a case first.</option>';
+            } else {
+                cases.forEach(caseItem => {
+                    const option = document.createElement('option');
+                    option.value = caseItem.id;
+                    option.textContent = `${caseItem.case_number} - ${caseItem.title}`;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function loadSecurityInfo() {
+            const auditLog = db.getAuditLog(currentUser.id, 10);
+            const sessions = db.data.sessions.filter(s => s.user_id === currentUser.id && s.is_active);
+            
+            document.getElementById('sessionExpires').textContent = 
+                sessions.length > 0 ? new Date(sessions[0].expires_at).toLocaleString() : 'N/A';
+        }
+
+        // Form Handlers
+        async function handleNewCase(e) {
+            e.preventDefault();
+            
+            const title = securityManager.sanitizeInput(document.getElementById('caseTitle').value);
+            const description = securityManager.sanitizeInput(document.getElementById('caseDescription').value);
+            const priority = document.getElementById('casePriority').value;
+            const tags = document.getElementById('caseTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+            
+            const caseItem = db.createCase({
+                title,
+                description,
+                priority,
+                tags,
+                created_by: currentUser.id
+            });
+            
+            showToast('Case created successfully!', 'success');
+            document.getElementById('newCaseForm').reset();
+            toggleElement('caseForm', false);
+            loadCases();
+            loadDashboard();
+        }
+
+        async function handleNewEvidence(e) {
+            e.preventDefault();
+            
+            const caseId = parseInt(document.getElementById('evidenceCase').value);
+            const name = securityManager.sanitizeInput(document.getElementById('evidenceName').value);
+            const evidenceType = document.getElementById('evidenceType').value;
+            const tags = document.getElementById('evidenceTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+            const file = document.getElementById('evidenceFile').files[0];
+            
+            if (!file) {
+                showToast('Please select a file to upload.', 'error');
+                return;
+            }
+            
+            // Validate file
+            if (!securityManager.validateFileSize(file, 100)) {
+                showToast('File size exceeds 100MB limit', 'error');
+                return;
+            }
+            
+            // Extract metadata
+            showToast('Processing file metadata...', 'info');
+            
+            let metadata = {};
+            if (file.type.startsWith('image/')) {
+                metadata = await MetadataExtractor.extractImageMetadata(file);
+            } else {
+                metadata = await MetadataExtractor.extractFileMetadata(file);
+            }
+            
+            // Calculate file hash
+            const fileHash = await MetadataExtractor.calculateFileHash(file);
+            
+            const evidence = db.createEvidence({
+                case_id: caseId,
+                name,
+                evidence_type: evidenceType,
+                file_name: file.name,
+                file_size: file.size,
+                file_hash: fileHash,
+                metadata: metadata,
+                tags,
+                uploaded_by: currentUser.id,
+                security_level: 'medium'
+            });
+            
+            showToast('Evidence uploaded and metadata extracted successfully!', 'success');
+            document.getElementById('newEvidenceForm').reset();
+            document.getElementById('fileName').textContent = '';
+            toggleElement('evidenceForm', false);
+            loadEvidence();
+            loadDashboard();
+        }
+
+        // Evidence Analysis
+        async function analyzeEvidence(evidenceId) {
+            const evidence = db.data.evidence.find(e => e.id === evidenceId);
+            if (!evidence) return;
+            
+            showSection('analysis');
+            const analysisContent = document.getElementById('analysisContent');
+            const restoreLoading = showLoading('analysisContent');
+            
+            setTimeout(() => {
+                restoreLoading();
+                
+                let html = `
+                    <div class="section-header">
+                        <h3>Analysis Results for: ${evidence.name}</h3>
+                        <span class="status status-analyzed">Analyzed</span>
+                    </div>
+                    
+                    <div class="metadata-section">
+                        <h4>File Information</h4>
+                        <div class="metadata-grid">
+                            <div class="metadata-item">
+                                <div class="metadata-key">File Hash</div>
+                                <div class="metadata-value" style="font-family: monospace; font-size: 0.9rem;">${evidence.file_hash}</div>
+                            </div>
+                            <div class="metadata-item">
+                                <div class="metadata-key">Integrity Check</div>
+                                <div class="metadata-value"><span style="color: var(--success);"><i class="fas fa-check-circle"></i> Valid</span></div>
+                            </div>
+                            <div class="metadata-item">
+                                <div class="metadata-key">Security Level</div>
+                                <div class="metadata-value">${evidence.security_level}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add metadata if available
+                if (evidence.metadata && Object.keys(evidence.metadata).length > 0) {
+                    html += formatMetadata(evidence.metadata);
+                }
+                
+                // Add analysis tools
+                html += `
+                    <div style="margin-top: 30px;">
+                        <h4>Analysis Tools</h4>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button class="btn btn-primary" onclick="showHexView(${evidenceId})">
+                                <i class="fas fa-code"></i> Hex View
+                            </button>
+                            <button class="btn btn-warning" onclick="showStrings(${evidenceId})">
+                                <i class="fas fa-font"></i> Extract Strings
+                            </button>
+                            <button class="btn btn-success" onclick="generateHashReport(${evidenceId})">
+                                <i class="fas fa-fingerprint"></i> Hash Report
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                analysisContent.innerHTML = html;
+                
+                // Update evidence status
+                evidence.status = 'analyzed';
+                evidence.analyzed_at = new Date().toISOString();
+                evidence.analyzed_by = currentUser.id;
+                db.save();
+                
+                db.logAudit('EVIDENCE_ANALYZED', currentUser.id, { evidenceId: evidence.id });
+            }, 1500);
+        }
+
+        // Security Functions
+        function handleChangePassword() {
+            const newPassword = prompt('Enter new password:');
+            if (!newPassword) return;
+            
+            if (!securityManager.validatePassword(newPassword)) {
+                showToast('Password must be at least 8 characters with uppercase, lowercase, number, and special character.', 'error');
+                return;
+            }
+            
+            const confirmPassword = prompt('Confirm new password:');
+            if (newPassword !== confirmPassword) {
+                showToast('Passwords do not match!', 'error');
+                return;
+            }
+            
+            // Update password
+            currentUser.password = securityManager.hashPassword(newPassword);
+            currentUser.last_password_change = new Date().toISOString();
+            db.save();
+            
+            showToast('Password changed successfully!', 'success');
+            db.logAudit('PASSWORD_CHANGED', currentUser.id);
+        }
+
+        function viewAuditLog() {
+            const logs = db.getAuditLog(currentUser.id, 20);
+            let html = '<div class="metadata-section"><h4>Recent Activity Log</h4>';
+            
+            if (logs.length === 0) {
+                html += '<p>No activity recorded yet.</p>';
+            } else {
+                html += '<div style="max-height: 400px; overflow-y: auto;">';
+                logs.forEach(log => {
+                    html += `
+                        <div style="padding: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="font-weight: 600;">${log.action.replace('_', ' ')}</span>
+                                <span style="color: var(--gray);">${new Date(log.timestamp).toLocaleString()}</span>
+                            </div>
+                            <div style="color: #666; margin-top: 5px;">
+                                ${log.details ? JSON.stringify(log.details) : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            
+            const analysisContent = document.getElementById('analysisContent');
+            analysisContent.innerHTML = html;
+            showSection('analysis');
+        }
+
+        // Utility Functions
+        function toggleElement(elementId, show = null) {
+            const element = document.getElementById(elementId);
+            if (show === null) {
+                element.style.display = element.style.display === 'none' ? 'block' : 'none';
+            } else {
+                element.style.display = show ? 'block' : 'none';
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function viewCase(caseId) {
+            const caseItem = db.data.cases.find(c => c.id === caseId);
+            if (!caseItem) return;
+            
+            const evidence = db.data.evidence.filter(e => e.case_id === caseId);
+            
+            let html = `
+                <div class="section-header">
+                    <h3>Case: ${caseItem.case_number} - ${caseItem.title}</h3>
+                    <span class="status status-${caseItem.status}">${caseItem.status}</span>
+                </div>
+                
+                <div class="metadata-section">
+                    <h4>Case Details</h4>
+                    <div class="metadata-grid">
+                        <div class="metadata-item">
+                            <div class="metadata-key">Priority</div>
+                            <div class="metadata-value">${caseItem.priority}</div>
+                        </div>
+                        <div class="metadata-item">
+                            <div class="metadata-key">Evidence Count</div>
+                            <div class="metadata-value">${evidence.length} items</div>
+                        </div>
+                        <div class="metadata-item">
+                            <div class="metadata-key">Created</div>
+                            <div class="metadata-value">${new Date(caseItem.created_at).toLocaleString()}</div>
+                        </div>
+                        <div class="metadata-item">
+                            <div class="metadata-key">Case Hash</div>
+                            <div class="metadata-value" style="font-family: monospace; font-size: 0.9rem;">${caseItem.hash}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 15px;">
+                        <div class="metadata-key">Description</div>
+                        <div class="metadata-value">${caseItem.description}</div>
+                    </div>
+                </div>
+            `;
+            
+            if (evidence.length > 0) {
+                html += `
+                    <div class="metadata-section">
+                        <h4>Associated Evidence (${evidence.length})</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Uploaded</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+                
+                evidence.forEach(item => {
+                    html += `
+                        <tr>
+                            <td>${item.name}</td>
+                            <td>${item.evidence_type}</td>
+                            <td><span class="status status-${item.status}">${item.status}</span></td>
+                            <td>${new Date(item.uploaded_at).toLocaleDateString()}</td>
+                            <td>
+                                <button class="btn btn-primary" onclick="analyzeEvidence(${item.id})">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            const analysisContent = document.getElementById('analysisContent');
+            analysisContent.innerHTML = html;
+            showSection('analysis');
+        }
+
+        function viewEvidence(evidenceId) {
+            openMetadataModal(evidenceId);
+        }
+
+        function generateReport() {
+            showToast('Generating comprehensive forensic report...', 'info');
+            
+            setTimeout(() => {
+                const reportContent = document.getElementById('reportsContent');
+                reportContent.innerHTML = `
+                    <div class="metadata-section">
+                        <h4><i class="fas fa-file-pdf"></i> Forensic Report - ${new Date().toLocaleDateString()}</h4>
+                        <div class="metadata-grid">
+                            <div class="metadata-item">
+                                <div class="metadata-key">Report ID</div>
+                                <div class="metadata-value">REP-${Date.now()}</div>
+                            </div>
+                            <div class="metadata-item">
+                                <div class="metadata-key">Generated By</div>
+                                <div class="metadata-value">${currentUser.username}</div>
+                            </div>
+                            <div class="metadata-item">
+                                <div class="metadata-key">Date Generated</div>
+                                <div class="metadata-value">${new Date().toLocaleString()}</div>
+                            </div>
+                            <div class="metadata-item">
+                                <div class="metadata-key">Report Hash</div>
+                                <div class="metadata-value" style="font-family: monospace;">${securityManager.generateSecureToken().substring(0, 32)}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 20px;">
+                            <h5>Summary</h5>
+                            <p>Total Cases: ${db.data.cases.length}</p>
+                            <p>Total Evidence: ${db.data.evidence.length}</p>
+                            <p>Pending Analysis: ${db.data.evidence.filter(e => e.status === 'uploaded').length}</p>
+                        </div>
+                        
+                        <div style="margin-top: 20px;">
+                            <button class="btn btn-success" onclick="downloadReport()">
+                                <i class="fas fa-download"></i> Download PDF Report
+                            </button>
+                            <button class="btn btn-primary" onclick="printReport()">
+                                <i class="fas fa-print"></i> Print Report
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                showToast('Report generated successfully!', 'success');
+                db.logAudit('REPORT_GENERATED', currentUser.id);
+            }, 2000);
+        }
+
+        function downloadReport() {
+            showToast('Report download started...', 'success');
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        // Analysis tool functions
+        function showHexView(evidenceId) {
+            showToast('Hex view feature would open here', 'info');
+        }
+
+        function showStrings(evidenceId) {
+            showToast('String extraction feature would open here', 'info');
+        }
+
+        function generateHashReport(evidenceId) {
+            showToast('Hash report generation would start here', 'info');
+        }
+
+        // Initialize sample data
+        function addSampleData() {
+            if (db.data.users.length === 0) {
+                db.createUser({
+                    username: 'demo',
+                    email: 'demo@trackx.com',
+                    password: 'SecurePass123!',
+                    role: 'investigator'
+                });
+                
+                db.createCase({
+                    title: 'Sample Fraud Investigation',
+                    description: 'Initial investigation into potential financial fraud',
+                    priority: 'high',
+                    tags: ['fraud', 'financial', 'digital'],
+                    created_by: 1
+                });
+                
+                db.save();
+                showToast('Sample data initialized', 'info');
+            }
+        }
+
+        // Initialize sample data on first load
+        addSampleData();
+    </script>
+</body>
+</html>
