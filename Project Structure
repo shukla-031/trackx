@@ -15,3 +15,73 @@ trackx-digital-forensic-tool/
 ├── scripts/
 │   └── deploy.js
 └── package.json
+
+
+
+Creating a New Case
+Login with your credentials
+
+Navigate to "Cases" section
+
+Click "Add New Case"
+
+Fill in case details (title, priority, description)
+
+Add relevant tags for categorization
+
+Uploading Evidence
+Select a case from the dropdown
+
+Click "Upload Evidence"
+
+Choose file(s) to upload
+
+Add evidence type and tags
+
+Review extracted metadata
+
+Analyzing Evidence
+Go to "Analysis" section
+
+Select evidence to analyze
+
+View extracted metadata
+
+Use analysis tools (Hex view, String search)
+
+Generate forensic report
+
+Generating Reports
+Navigate to "Reports" section
+
+Click "Generate Report"
+
+Select report format (PDF recommended)
+
+Download or print the report
+
+🏗️ Architecture
+Frontend
+Pure HTML/CSS/JavaScript - No framework dependencies
+
+Responsive Design - Works on desktop and tablet
+
+Modular Components - Reusable UI components
+
+Security Features
+CryptoJS for client-side encryption
+
+EXIF.js for image metadata extraction
+
+LocalStorage Encryption for data protection
+
+Input Sanitization to prevent XSS
+
+Data Management
+Mock Database using localStorage
+
+Encrypted Storage for sensitive data
+
+Audit Trail for all operations
+
+Backup & Restore capabilities
