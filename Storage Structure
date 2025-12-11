@@ -1,0 +1,16 @@
+Storage Structure
+
+localStorage Schema
+
+{
+    "trackx_encrypted_data": {
+        "users": [],
+        "cases": [],
+        "evidence": [],
+        "sessions": [],
+        "auditLog": [],
+        "securitySettings": []
+    }
+}
+
+
