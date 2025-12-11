@@ -1,0 +1,191 @@
+
+## **5. docs/features.md**
+
+```markdown
+# Detailed Features Documentation
+
+## Authentication & Security
+
+### User Management
+- **Multi-role System**: Investigator, Admin, Viewer roles
+- **Password Policies**: Minimum 8 characters, mixed case, numbers, special characters
+- **Account Lockout**: Automatic lockout after 5 failed attempts
+- **Session Management**: 24-hour session timeout
+
+### Security Features
+- **AES-256 Encryption**: All data encrypted at rest
+- **SHA-256 Hashing**: Password hashing with salt
+- **Input Sanitization**: Protection against XSS attacks
+- **Audit Logging**: Complete trail of all user actions
+
+## Case Management
+
+### Creating Cases
+- **Case Number Generation**: Automatic unique case numbers
+- **Priority Levels**: Low, Medium, High, Critical
+- **Tag System**: Categorize cases with custom tags
+- **Description Fields**: Detailed case documentation
+
+### Case Organization
+- **Search & Filter**: Find cases by number, title, or tags
+- **Sorting Options**: Sort by date, priority, or status
+- **Bulk Operations**: Import multiple files at once
+- **Evidence Linking**: Connect evidence to specific cases
+
+## Evidence Management
+
+### File Upload
+- **Multiple Formats**: Images, documents, archives, logs
+- **Size Limits**: Configurable file size limits (default: 100MB)
+- **Type Validation**: Whitelist of allowed file types
+- **Batch Upload**: Upload multiple files simultaneously
+
+### Evidence Processing
+- **Automatic Metadata Extraction**: Extract file information
+- **Hash Generation**: Calculate MD5, SHA-1, SHA-256 hashes
+- **EXIF Data**: Extract camera and location data from images
+- **File Integrity**: Verify file integrity through hashing
+
+## Forensic Analysis
+
+### Metadata Analysis
+- **File Information**: Size, type, timestamps, attributes
+- **EXIF Data**: Camera make/model, GPS coordinates, timestamps
+- **System Information**: File paths, permissions, ownership
+- **Technical Data**: Dimensions, format, compression
+
+### Analysis Tools
+- **Hex Viewer**: Binary file examination
+- **String Search**: Search for patterns in files
+- **Hash Verification**: Verify file integrity
+- **Timeline Analysis**: Chronological event reconstruction
+
+### Artifact Analysis
+- **Browser History**: Extract browsing history
+- **USB Device Logs**: Track USB device connections
+- **System Logs**: Analyze system events
+- **Recent Files**: Track file access patterns
+
+## Reporting System
+
+### Report Generation
+- **Multiple Formats**: PDF, HTML, CSV exports
+- **Custom Templates**: Create custom report templates
+- **Automated Generation**: Schedule automatic reports
+- **Data Visualization**: Charts and graphs for analysis
+
+### Report Content
+- **Case Summary**: Overview of case details
+- **Evidence List**: Complete evidence inventory
+- **Analysis Results**: Findings and observations
+- **Recommendations**: Suggested next steps
+- **Chain of Custody**: Evidence handling documentation
+
+## User Interface
+
+### Dashboard
+- **Statistics**: Case counts, evidence items, pending analysis
+- **Recent Activity**: Latest user actions
+- **Quick Actions**: Common tasks shortcuts
+- **Notifications**: System alerts and updates
+
+### Navigation
+- **Sidebar Menu**: Organized by function
+- **Breadcrumbs**: Track navigation path
+- **Search**: Global search across all data
+- **Filters**: Advanced filtering options
+
+### Responsive Design
+- **Desktop Optimization**: Full feature set on large screens
+- **Tablet Support**: Adapted interface for tablets
+- **Mobile Responsive**: Basic functionality on mobile devices
+
+## Data Management
+
+### Storage
+- **LocalStorage**: Client-side data storage
+- **Encryption**: All sensitive data encrypted
+- **Backup**: Manual backup and restore
+- **Export**: Data export in JSON format
+
+### Data Integrity
+- **Hash Verification**: Verify data integrity
+- **Audit Trail**: Track all data modifications
+- **Version Control**: Track changes to cases
+- **Validation**: Data validation on input
+
+## Integration Capabilities
+
+### File System Integration
+- **Local File Access**: Import from local file system
+- **Drag & Drop**: Easy file upload interface
+- **Folder Import**: Import entire folders
+- **External Storage**: Support for external drives
+
+### Browser Integration
+- **Bookmarklets**: Quick capture tools
+- **Browser Extensions**: Evidence collection tools
+- **API Access**: REST API for integration
+- **Webhooks**: Notification system
+
+## Administration
+
+### User Administration
+- **User Management**: Create, edit, delete users
+- **Role Assignment**: Assign permissions by role
+- **Activity Monitoring**: Monitor user activities
+- **Access Control**: Granular permission system
+
+### System Configuration
+- **Settings Management**: Configure application settings
+- **Security Configuration**: Adjust security parameters
+- **Backup Configuration**: Schedule automatic backups
+- **Log Management**: View and manage system logs
+
+## Advanced Features
+
+### Timeline Analysis
+- **Event Correlation**: Connect related events
+- **Visual Timeline**: Graphical event representation
+- **Time Filtering**: Filter events by time range
+- **Event Types**: Categorize events by type
+
+### Hash Analysis
+- **Hash Databases**: Compare against known hash databases
+- **Hash Collision Detection**: Identify potential collisions
+- **Batch Hashing**: Hash multiple files simultaneously
+- **Hash Verification**: Verify evidence integrity
+
+### Memory Analysis
+- **Process Analysis**: Analyze running processes
+- **Network Connections**: Examine network activity
+- **Memory Dumps**: Analyze memory dump files
+- **Artifact Extraction**: Extract artifacts from memory
+
+## Performance & Optimization
+
+### Performance Features
+- **Lazy Loading**: Load data as needed
+- **Caching**: Cache frequently accessed data
+- **Compression**: Compress data for storage
+- **Optimization**: Performance optimizations
+
+### Scalability
+- **Large Datasets**: Handle large evidence collections
+- **Multiple Users**: Support concurrent users
+- **High Performance**: Optimized for speed
+- **Resource Management**: Efficient resource usage
+
+## Security & Compliance
+
+### Compliance Features
+- **Audit Trail**: Complete activity logging
+- **Data Retention**: Configurable data retention
+- **Privacy Controls**: User privacy protections
+- **Compliance Reports**: Generate compliance reports
+
+### Security Controls
+- **Access Logging**: Log all access attempts
+- **Data Encryption**: End-to-end encryption
+- **Security Audits**: Regular security audits
+- **Vulnerability Scanning**: Security vulnerability checks
