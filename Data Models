@@ -1,0 +1,43 @@
+User Model
+{
+    id: Number,
+    username: String,
+    email: String,
+    password: String (hashed),
+    role: String,
+    created_at: ISOString,
+    last_login: ISOString,
+    failed_login_attempts: Number,
+    is_active: Boolean
+}
+
+Case Model
+{
+    id: Number,
+    case_number: String,
+    title: String,
+    description: String,
+    status: String,
+    priority: String,
+    tags: Array,
+    evidence_count: Number,
+    created_by: Number,
+    created_at: ISOString,
+    hash: String
+}
+
+Evidence Model
+{
+    id: Number,
+    case_id: Number,
+    name: String,
+    evidence_type: String,
+    file_name: String,
+    file_size: Number,
+    file_hash: String,
+    status: String,
+    metadata: Object,
+    tags: Array,
+    uploaded_by: Number,
+    uploaded_at: ISOString
+}
