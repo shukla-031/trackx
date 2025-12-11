@@ -1,0 +1,14 @@
+// config.js
+const TrackXConfig = {
+    appName: "TrackX Forensic Tool",
+    version: "2.0.0",
+    maxFileSize: 100, // MB
+    allowedFileTypes: [
+        'image/jpeg',
+        'image/png',
+        'application/pdf',
+        'text/plain'
+    ],
+    sessionTimeout: 24, // hours
+    encryptionKey: "your-secure-key-here"
+};
