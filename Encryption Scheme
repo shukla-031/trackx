@@ -1,0 +1,19 @@
+Encryption Scheme
+
+// Data Encryption
+encryptedData = AES.encrypt(data, key)
+
+// Password Hashing
+hashedPassword = SHA256(salt + password + key)
+
+// Token Generation
+token = SHA256(randomBytes + timestamp)
+
+Session Management
+Token-based authentication
+
+24-hour expiration
+
+IP address tracking
+
+Automatic logout on expiry
