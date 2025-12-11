@@ -1,0 +1,17 @@
+trackx-digital-forensic-tool/
+├── README.md
+├── index.html
+├── .gitignore
+├── LICENSE
+├── assets/
+│   ├── images/
+│   │   └── logo.png
+│   └── docs/
+│       └── user-guide.pdf
+├── docs/
+│   ├── setup.md
+│   ├── features.md
+│   └── technical.md
+├── scripts/
+│   └── deploy.js
+└── package.json
