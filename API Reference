@@ -1,0 +1,13 @@
+API Reference
+
+// Login
+SecurityManager.login(email, password)
+
+// Register
+SecurityManager.register(userData)
+
+// Logout
+SecurityManager.logout()
+
+// Validate Session
+SecurityManager.validateSession(token)
