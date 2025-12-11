@@ -1,0 +1,13 @@
+├── Presentation Layer (HTML/CSS)
+│ ├── UI Components
+│ ├── Templates
+│ └── Styling
+├── Application Layer (JavaScript)
+│ ├── SecurityManager
+│ ├── SecureDatabase
+│ ├── MetadataExtractor
+│ └── ForensicAnalyzer
+└── Data Layer
+├── localStorage (Encrypted)
+├── Session Storage
+└── IndexedDB (Optional)
