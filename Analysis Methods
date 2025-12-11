@@ -1,0 +1,14 @@
+Analysis Methods
+
+// Extract Metadata
+MetadataExtractor.extractImageMetadata(file)
+MetadataExtractor.extractFileMetadata(file)
+
+// Calculate Hash
+MetadataExtractor.calculateFileHash(file)
+
+// Analyze Browser Artifacts
+ForensicAnalyzer.analyzeBrowserArtifacts()
+
+// Analyze USB History
+ForensicAnalyzer.analyzeUSBHistory()
